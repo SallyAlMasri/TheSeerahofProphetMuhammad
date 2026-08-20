@@ -4,9 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>اختبار السيرة النبوية</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -39,47 +37,51 @@ let currentQuestion = 0;
 let score = 0;
 
 function showQuestion() {
-
     const card = cards[currentQuestion];
 
-    questionNumber.textContent =
-        `السؤال ${currentQuestion + 1} من ${cards.length}`;
+    questionNumber.textContent = `السؤال ${currentQuestion + 1} من ${cards.length}`;
+    scoreElement.textContent = `⭐ النقاط: ${score}`;
 
-    scoreElement.textContent =
-        `⭐ النقاط: ${score}`;
-
+    // 1. نرسم الكارد بدون options
     container.innerHTML = `
         <div class="quiz-card">
-
-            <div class="category">
-                ${card.category}
-            </div>
-
+            <div class="category">${card.category}</div>
             <h2>${card.question}</h2>
-
-            <div class="options">
-
-                ${card.options.map((option, index) => `
-                    <button
-                        class="option"
-                        onclick="checkAnswer(${index})">
-                        ${option}
-                    </button>
-                `).join("")}
-
-            </div>
-
+            <div id="timer">⏳ الخيارات ستظهر بعد 5 ثواني</div>
+            <div id="options-box"></div>
             <div id="feedback"></div>
-
         </div>
     `;
+
+    // 2. مؤقت 3 ثواني
+    let seconds = 7;
+    const timerEl = document.getElementById('timer');
+    const optionsBox = document.getElementById('options-box');
+
+    const countdown = setInterval(() => {
+        seconds--;
+        timerEl.textContent = `⏳ الخيارات ستظهر بعد ${seconds} ثواني`;
+
+        if(seconds <= 0){
+            clearInterval(countdown);
+            timerEl.style.display = "none"; // نخفي المؤقت
+
+            // 3. نعرض الخيارات
+            optionsBox.innerHTML = `
+                <div class="options">
+                    ${card.options.map((option, index) => `
+                        <button class="option" onclick="checkAnswer(${index})">
+                            ${option}
+                        </button>
+                    `).join("")}
+                </div>
+            `;
+        }
+    }, 1000);
 }
 
-
 function checkAnswer(selected) {
-
     const card = cards[currentQuestion];
-
     const buttons = document.querySelectorAll(".option");
 
     buttons.forEach(button => {
@@ -87,154 +89,81 @@ function checkAnswer(selected) {
     });
 
     if (selected === card.correct) {
-
         score++;
-
         buttons[selected].classList.add("correct");
-
-        showPopup(
-            "أحسنتِ!",
-                "",
-            true
-        );
-
+        showPopup("أحسنتِ!", "", true);
     } else {
-
         buttons[selected].classList.add("wrong");
         buttons[card.correct].classList.add("correct");
-
         showPopup(
             "إجابة خاطئة",
             `الإجابة الصحيحة هي:<br><strong>${card.options[card.correct]}</strong>`,
             false
         );
     }
-
     scoreElement.textContent = `⭐ النقاط: ${score}`;
 }
 
-
 function showResult() {
-
     container.style.display = "none";
     questionNumber.style.display = "none";
     scoreElement.style.display = "none";
 
-    const percentage =
-        Math.round((score / cards.length) * 100);
-
+    const percentage = Math.round((score / cards.length) * 100);
     let message = "";
 
     if (percentage === 100) {
-
-        message = `
-            🌟 ما شاء الله! 🌟
-            <br>
-            أجبتِ عن جميع الأسئلة بشكل صحيح!
-            <br>
-            🏆 ممتازة يا بطلة!
-        `;
-
+        message = `🌟 ما شاء الله! 🌟 <br> أجبتِ عن جميع الأسئلة بشكل صحيح! <br> 🏆 ممتازة يا بطلة!`;
     } else if (percentage >= 80) {
-
-        message = `
-            🎉 أحسنتِ!
-            <br>
-            نتيجة رائعة جدًا!
-            <br>
-            استمري بالتقدم 🌸
-        `;
-
+        message = `🎉 أحسنتِ! <br> نتيجة رائعة جدًا! <br> استمري بالتقدم 🌸`;
     } else if (percentage >= 60) {
-
-        message = `
-            🌷 أحسنتِ!
-            <br>
-            نتيجة جميلة، ويمكنكِ تحقيق الأفضل!
-        `;
-
+        message = `🌷 أحسنتِ! <br> نتيجة جميلة، ويمكنكِ تحقيق الأفضل!`;
     } else {
-
-        message = `
-            💗 لا بأس!
-            <br>
-            راجعي الدرس وحاولي مرة أخرى.
-        `;
+        message = `💗 لا بأس! <br> راجعي الدرس وحاولي مرة أخرى.`;
     }
 
     result.innerHTML = `
         <div class="final-result">
-
             <div class="trophy">🏆</div>
-
             <h2>انتهى الاختبار!</h2>
-
-            <div class="final-score">
-                ${score} / ${cards.length}
-            </div>
-
+            <div class="final-score">${score} / ${cards.length}</div>
             <p>${message}</p>
-
-
+            <button onclick="restartQuiz()">إعادة الاختبار</button>
         </div>
     `;
-
     result.classList.remove("hidden");
 }
 
 function showPopup(title, message, correct) {
-
     const popup = document.createElement("div");
-
     popup.className = "answer-overlay";
 
     popup.innerHTML = `
-        <div class="answer-popup ${correct ? "popup-correct" : "popup-wrong"}">
-
+        <div class="answer-popup ${correct? "popup-correct" : "popup-wrong"}">
             <button class="close-popup">×</button>
-
-            <div class="popup-icon">
-                ${correct ? "✅" : "❌"}
-            </div>
-
+            <div class="popup-icon">${correct? "✅" : "❌"}</div>
             <h2>${title}</h2>
-
             <p>${message}</p>
-
             <button class="next-question">
-                ${currentQuestion + 1 === cards.length
-                    ? "🏆 عرض النتيجة"
-                    : "السؤال التالي ←"}
+                ${currentQuestion + 1 === cards.length? "🏆 عرض النتيجة" : "السؤال التالي ←"}
             </button>
-
         </div>
     `;
-
     document.body.appendChild(popup);
 
     popup.querySelector(".next-question").addEventListener("click", () => {
-
         popup.remove();
-
         currentQuestion++;
-
         if (currentQuestion < cards.length) {
-
             showQuestion();
-
         } else {
-
             showResult();
-
         }
     });
 
     popup.querySelector(".close-popup").addEventListener("click", () => {
-
         popup.remove();
-
         currentQuestion++;
-
         if (currentQuestion < cards.length) {
             showQuestion();
         } else {
@@ -242,24 +171,19 @@ function showPopup(title, message, correct) {
         }
     });
 }
-function restartQuiz() {
 
+function restartQuiz() {
     currentQuestion = 0;
     score = 0;
-
     container.style.display = "block";
     questionNumber.style.display = "inline";
     scoreElement.style.display = "inline";
-
     result.classList.add("hidden");
-
     showQuestion();
 }
-
 
 showQuestion();
 
 </script>
-
 </body>
 </html>
